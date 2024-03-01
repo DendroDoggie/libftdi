@@ -517,7 +517,7 @@ extern "C"
 {
 #endif
 
-    int ftdi_init(struct ftdi_context *ftdi);
+    int ftdi_init(struct ftdi_context *ftdi, int fileDescriptor);
     struct ftdi_context *ftdi_new(void);
     int ftdi_set_interface(struct ftdi_context *ftdi, enum ftdi_interface interface);
     int ftdi_set_module_detach_mode(struct ftdi_context *ftdi, enum ftdi_module_detach_mode mode);

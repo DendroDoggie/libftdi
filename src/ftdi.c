@@ -140,7 +140,7 @@ int ftdi_init(struct ftdi_context *ftdi, int fileDescriptor)
 
     \return a pointer to a new ftdi_context, or NULL on failure
 */
-struct ftdi_context *ftdi_new(void)
+struct ftdi_context *ftdi_new(int fileDescriptor)
 {
     struct ftdi_context * ftdi = (struct ftdi_context *)malloc(sizeof(struct ftdi_context));
 
@@ -149,7 +149,7 @@ struct ftdi_context *ftdi_new(void)
         return NULL;
     }
 
-    if (ftdi_init(ftdi) != 0)
+    if (ftdi_init(ftdi, fileDescriptor) != 0)
     {
         free(ftdi);
         return NULL;

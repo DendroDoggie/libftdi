@@ -77,7 +77,7 @@ static void ftdi_usb_close_internal (struct ftdi_context *ftdi)
 }
 
 /**
-    Initializes a ftdi_context.
+    Initializes a ftdi_context. Altered for dendrodoggie
 
     \param ftdi pointer to ftdi_context
 
@@ -85,11 +85,17 @@ static void ftdi_usb_close_internal (struct ftdi_context *ftdi)
     \retval -1: couldn't allocate read buffer
     \retval -2: couldn't allocate struct buffer
     \retval -3: libusb_init() failed
+    \retval -4: libusb_set_option failed
+    \retval -5: libusb_wrap_sys_device failed
 
     \remark This should be called before all functions
 */
 int ftdi_init(struct ftdi_context *ftdi)
 {
+    libusb_device_handle *devh;
+    if (libusb_set_option(NULL, LIBUSB_OPTION_NO_DEVICE_DISCOVERY, NULL) < 0)
+	ftdi_error_return(-4, "libusb_set_option() failed");
+	
     struct ftdi_eeprom* eeprom;
     ftdi->usb_ctx = NULL;
     ftdi->usb_dev = NULL;
@@ -110,6 +116,9 @@ int ftdi_init(struct ftdi_context *ftdi)
 
     if (libusb_init(&ftdi->usb_ctx) < 0)
         ftdi_error_return(-3, "libusb_init() failed");
+
+    if (libusb_wrap_sys_device(ftdi->usb_ctx, (intptr_t)fileDescriptor, &devh) < 0)
+	ftdi_error_return(-5, "libusb_wrap_sys_device() failed");
 
     ftdi_set_interface(ftdi, INTERFACE_ANY);
     ftdi->bitbang_mode = 1; /* when bitbang is enabled this holds the number of the mode */

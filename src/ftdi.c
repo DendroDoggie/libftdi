@@ -77,7 +77,7 @@ static void ftdi_usb_close_internal (struct ftdi_context *ftdi)
 }
 
 /**
-    Initializes a ftdi_context.
+    Initializes a ftdi_context. Altered for DendroDoggie to support Android native
 
     \param ftdi pointer to ftdi_context
 
@@ -88,7 +88,7 @@ static void ftdi_usb_close_internal (struct ftdi_context *ftdi)
 
     \remark This should be called before all functions
 */
-int ftdi_init(struct ftdi_context *ftdi)
+int ftdi_init(struct ftdi_context *ftdi, intptr_t fileDescriptor)
 {
     struct ftdi_eeprom* eeprom;
     ftdi->usb_ctx = NULL;
@@ -108,8 +108,14 @@ int ftdi_init(struct ftdi_context *ftdi)
     ftdi->error_str = NULL;
     ftdi->module_detach_mode = AUTO_DETACH_SIO_MODULE;
 
-    if (libusb_init(&ftdi->usb_ctx) < 0)
+    struct libusb_init_option optionsArr[] = {
+            {LIBUSB_OPTION_NO_DEVICE_DISCOVERY, 0}
+    };
+
+    if (libusb_init_context(&ftdi->usb_ctx, optionsArr, 1) < 0)
         ftdi_error_return(-3, "libusb_init() failed");
+
+    libusb_wrap_sys_device(ftdi->usb_ctx, fileDescriptor, &ftdi->usb_dev);
 
     ftdi_set_interface(ftdi, INTERFACE_ANY);
     ftdi->bitbang_mode = 1; /* when bitbang is enabled this holds the number of the mode */
@@ -129,7 +135,7 @@ int ftdi_init(struct ftdi_context *ftdi)
 
     \return a pointer to a new ftdi_context, or NULL on failure
 */
-struct ftdi_context *ftdi_new(void)
+struct ftdi_context *ftdi_new(intptr_t fileDescriptor)
 {
     struct ftdi_context * ftdi = (struct ftdi_context *)malloc(sizeof(struct ftdi_context));
 
@@ -138,7 +144,7 @@ struct ftdi_context *ftdi_new(void)
         return NULL;
     }
 
-    if (ftdi_init(ftdi) != 0)
+    if (ftdi_init(ftdi, fileDescriptor) != 0)
     {
         free(ftdi);
         return NULL;
